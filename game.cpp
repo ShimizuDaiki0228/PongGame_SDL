@@ -47,10 +47,10 @@ bool Game::Initialize()
 		return false;
 	}
 
-	ball_1.ballPos.x = 0, ball_1.ballPos.y = 0;
+	ball_1.ballPos.x = 100, ball_1.ballPos.y = 100;
 	ball_1.ballVel.x = 1, ball_1.ballVel.y = 1;
-	ball_2.ballPos.x = 0, ball_1.ballPos.y = 50;
-	ball_2.ballVel.x = -1, ball_1.ballVel.y = -1;
+	ball_2.ballPos.x = 800, ball_2.ballPos.y = 300;
+	ball_2.ballVel.x = -1, ball_2.ballVel.y = -1;
 }
 
 void Game::RunLoop()
@@ -170,24 +170,11 @@ void Game::MoveBall(float deltaTime, Ball* ball)
 float Game::CheckPaddlePosition(Vector2 paddlePos, Ball ball)
 {
 	int diff = abs(paddlePos.y - ball.ballPos.y);
-	//if (ball.ballVel.x < 0)
-	//{
-		if (diff <= PADDLE_H / 2 &&
-			ball.ballPos.x <= paddlePos.x + THICKNESS && ball.ballPos.x >= paddlePos.x - THICKNESS)
-		{
-			return -1;
-		}
-	//}
-	//else
-	//{
-	//	///要修正
-	//	if (diff <= PADDLE_H / 2 &&
-	//		ball.ballPos.x <= ball.ballPos.x + THICKNESS && ball.ballPos.x >= ball.ballPos.x - THICKNESS)
-	//	{
-	//		return -1;
-	//	}
-	//}
-	
+	if (diff <= PADDLE_H / 2 &&
+		ball.ballPos.x <= paddlePos.x + THICKNESS && ball.ballPos.x >= paddlePos.x - THICKNESS)
+	{
+		return -1;
+	}
 
 	return 1;
 }
@@ -235,8 +222,7 @@ void Game::GenerateOutput()
 		static_cast<int>(ball_2.ballPos.x - THICKNESS / 2),
 		static_cast<int>(ball_2.ballPos.y - THICKNESS / 2),
 		THICKNESS,
-		THICKNESS
-	);
+		THICKNESS);
 
 	//1つめのパドルの作成
 	GenerateRect(
@@ -261,11 +247,6 @@ void Game::GenerateOutput()
 /// <summary>
 /// 長方形のオブジェクトを作成する
 /// </summary>
-/// <param name="mRenderer"></param>
-/// <param name="x"></param>
-/// <param name="y"></param>
-/// <param name="width"></param>
-/// <param name="height"></param>
 void GenerateRect(SDL_Renderer* mRenderer, 
 				  int x,
 			      int y,
