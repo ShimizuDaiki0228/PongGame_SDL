@@ -9,6 +9,12 @@ struct Vector2
 	Vector2(float a = 0.0f, float b = 0.0f) : x(a), y(b) {}
 };
 
+struct Paddle
+{
+	int direction;
+	Vector2 position;
+};
+
 struct Ball
 {
 	Vector2 ballPos;
@@ -25,6 +31,8 @@ public:
 	void ShutDown();
 
 private:
+	void Reset();
+
 	void ProcessInput();
 	void UpdateGame();
 	void GenerateOutput();
@@ -59,10 +67,12 @@ private:
 	/// パドル
 	/// </summary>
 	const int PADDLE_H = 40;
-	int mPaddleDir_1 = 0;
-	Vector2 mPaddlePos_1;
-	int mPaddleDir_2 = 0;
-	Vector2 mPaddlePos_2;
+	//int mPaddleDir_1 = 0;
+	//Vector2 mPaddlePos_1;
+	//int mPaddleDir_2 = 0;
+	//Vector2 mPaddlePos_2;
+	Paddle paddle_1;
+	Paddle paddle_2;
 
 	/// <summary>
 	/// ボール
