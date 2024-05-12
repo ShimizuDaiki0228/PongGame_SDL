@@ -4,7 +4,7 @@ using namespace std;
 
 
 Game::Game()
-	: mWindow(nullptr), mIsRunning(true), mPaddlePos_1(30, 384),mPaddlePos_2(WINDOW_WIDTH - THICKNESS * 2, 384), mTicksCount(0)
+	: mWindow(nullptr), mIsRunning(true), mTicksCount(0)
 {
 	
 }
@@ -47,10 +47,18 @@ bool Game::Initialize()
 		return false;
 	}
 
+	Reset();
+}
+
+void Game::Reset()
+{
 	ball_1.ballPos.x = 100, ball_1.ballPos.y = 100;
 	ball_1.ballVel.x = 1, ball_1.ballVel.y = 1;
 	ball_2.ballPos.x = 800, ball_2.ballPos.y = 300;
 	ball_2.ballVel.x = -1, ball_2.ballVel.y = -1;
+
+	paddle_1.position.x = 30, paddle_1.position.y = 384;
+	paddle_2.position.x = WINDOW_WIDTH - THICKNESS * 2, paddle_2.position.y = 384;
 }
 
 void Game::RunLoop()
@@ -89,10 +97,10 @@ void Game::ProcessInput()
 		mIsRunning = false;
 	}
 
-	mPaddleDir_1 = 0;
-	mPaddleDir_2 = 0;
-	mPaddleDir_1 = ChangePaddleDir(state, SDL_SCANCODE_W, SDL_SCANCODE_S);
-	mPaddleDir_2 = ChangePaddleDir(state, SDL_SCANCODE_I, SDL_SCANCODE_K);
+	paddle_1.direction = 0;
+	paddle_2.direction = 0;
+	paddle_1.direction = ChangePaddleDir(state, SDL_SCANCODE_W, SDL_SCANCODE_S);
+	paddle_2.direction = ChangePaddleDir(state, SDL_SCANCODE_I, SDL_SCANCODE_K);
 	
 }
 
@@ -117,8 +125,8 @@ void Game::UpdateGame()
 
 	float deltaTime = CalculateDeltaTime(&mTicksCount);
 
-	MovePaddle(deltaTime, &mPaddlePos_1, mPaddleDir_1);
-	MovePaddle(deltaTime, &mPaddlePos_2, mPaddleDir_2);
+	MovePaddle(deltaTime, &paddle_1.position, paddle_1.direction);
+	MovePaddle(deltaTime, &paddle_2.position, paddle_2.direction);
 	MoveBall(deltaTime, &ball_1);
 	MoveBall(deltaTime, &ball_2);
 }
@@ -159,8 +167,8 @@ void Game::MoveBall(float deltaTime, Ball* ball)
 		ball->ballPos.x > WINDOW_WIDTH - THICKNESS / 2 && ball->ballVel.x > 0) ball->ballVel.x *= -1;
 
 	
-	ball->ballVel.x *= CheckPaddlePosition(mPaddlePos_1, *ball);
-	ball->ballVel.x *= CheckPaddlePosition(mPaddlePos_2, *ball);
+	ball->ballVel.x *= CheckPaddlePosition(paddle_1.position, *ball);
+	ball->ballVel.x *= CheckPaddlePosition(paddle_2.position, *ball);
 	
 
 	ball->ballPos.x += ball->ballVel.x * 300 * deltaTime;
@@ -227,16 +235,16 @@ void Game::GenerateOutput()
 	//1つめのパドルの作成
 	GenerateRect(
 		mRenderer,
-		static_cast<int>(mPaddlePos_1.x - THICKNESS / 2),
-		static_cast<int>(mPaddlePos_1.y - THICKNESS / 2),
+		static_cast<int>(paddle_1.position.x - THICKNESS / 2),
+		static_cast<int>(paddle_1.position.y - THICKNESS / 2),
 		THICKNESS,
 		PADDLE_H);
 
 	//2つめのパドルの作成
 	GenerateRect(
 		mRenderer,
-		static_cast<int>(mPaddlePos_2.x - THICKNESS / 2),
-		static_cast<int>(mPaddlePos_2.y - THICKNESS / 2),
+		static_cast<int>(paddle_2.position.x - THICKNESS / 2),
+		static_cast<int>(paddle_2.position.y - THICKNESS / 2),
 		THICKNESS,
 		PADDLE_H);
 
