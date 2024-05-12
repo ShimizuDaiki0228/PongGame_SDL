@@ -9,6 +9,12 @@ struct Vector2
 	Vector2(float a = 0.0f, float b = 0.0f) : x(a), y(b) {}
 };
 
+struct Ball
+{
+	Vector2 ballPos;
+	Vector2 ballVel;
+};
+
 
 class Game
 {
@@ -23,8 +29,11 @@ private:
 	void UpdateGame();
 	void GenerateOutput();
 
-	void MovePaddle(float deltaTime);
-	void MoveBall(float deltaTime);
+	void MovePaddle(float deltaTime, Vector2* mPaddlePos, int mPaddleDir);
+	void MoveBall(float deltaTime, Ball* ball);
+
+	float CheckPaddlePosition(Vector2 paddlePos, Ball ball);
+
 
 	/// <summary>
 	/// ウインドウ周り
@@ -49,16 +58,20 @@ private:
 	/// <summary>
 	/// パドル
 	/// </summary>
-	int mPaddleDir = 0;
 	const int PADDLE_H = 40;
-	Vector2 mPaddlePos;
+	int mPaddleDir_1 = 0;
+	Vector2 mPaddlePos_1;
+	int mPaddleDir_2 = 0;
+	Vector2 mPaddlePos_2;
 
 	/// <summary>
 	/// ボール
 	/// </summary>
-	Vector2 mBallPos;
-	Vector2 mBallVel;
+	Ball ball_1;
+	Ball ball_2;
 };
 
 
 float CalculateDeltaTime(Uint32* mTicksCount);
+int ChangePaddleDir(const Uint8* state, SDL_Scancode UpKey, SDL_Scancode DownKey);
+void GenerateRect(SDL_Renderer* mRenderer, int x, int y, int width, int height);

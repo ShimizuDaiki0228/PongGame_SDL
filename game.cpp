@@ -4,7 +4,7 @@ using namespace std;
 
 
 Game::Game()
-	: mWindow(nullptr), mIsRunning(true), mPaddlePos(30, 384), mBallPos(512, 384), mTicksCount(0), mBallVel(1, 1)
+	: mWindow(nullptr), mIsRunning(true), mPaddlePos_1(30, 384),mPaddlePos_2(WINDOW_WIDTH - THICKNESS * 2, 384), mTicksCount(0)
 {
 	
 }
@@ -46,6 +46,11 @@ bool Game::Initialize()
 		SDL_Log("レンダラーの作成に失敗しました : %s", SDL_GetError());
 		return false;
 	}
+
+	ball_1.ballPos.x = 0, ball_1.ballPos.y = 0;
+	ball_1.ballVel.x = 1, ball_1.ballVel.y = 1;
+	ball_2.ballPos.x = 0, ball_1.ballPos.y = 50;
+	ball_2.ballVel.x = -1, ball_1.ballVel.y = -1;
 }
 
 void Game::RunLoop()
@@ -84,15 +89,25 @@ void Game::ProcessInput()
 		mIsRunning = false;
 	}
 
-	mPaddleDir = 0;
-	if (state[SDL_SCANCODE_W])
+	mPaddleDir_1 = 0;
+	mPaddleDir_2 = 0;
+	mPaddleDir_1 = ChangePaddleDir(state, SDL_SCANCODE_W, SDL_SCANCODE_S);
+	mPaddleDir_2 = ChangePaddleDir(state, SDL_SCANCODE_I, SDL_SCANCODE_K);
+	
+}
+
+int ChangePaddleDir(const Uint8* state, SDL_Scancode UpKey, SDL_Scancode DownKey)
+{
+	int dir = 0;
+	if (state[UpKey])
 	{
-		mPaddleDir -= 1;
+		dir -= 1;
 	}
-	if (state[SDL_SCANCODE_S])
+	if (state[DownKey])
 	{
-		mPaddleDir += 1;
+		dir += 1;
 	}
+	return dir;
 }
 
 void Game::UpdateGame()
@@ -102,8 +117,10 @@ void Game::UpdateGame()
 
 	float deltaTime = CalculateDeltaTime(&mTicksCount);
 
-	MovePaddle(deltaTime);
-	MoveBall(deltaTime);
+	MovePaddle(deltaTime, &mPaddlePos_1, mPaddleDir_1);
+	MovePaddle(deltaTime, &mPaddlePos_2, mPaddleDir_2);
+	MoveBall(deltaTime, &ball_1);
+	MoveBall(deltaTime, &ball_2);
 }
 
 float CalculateDeltaTime(Uint32* mTicksCount)
@@ -120,37 +137,59 @@ float CalculateDeltaTime(Uint32* mTicksCount)
 	return deltaTime;
 }
 
-void Game::MovePaddle(float deltaTime)
+void Game::MovePaddle(float deltaTime, Vector2* mPaddlePos, int mPaddleDir)
 {
-	mPaddlePos.y += mPaddleDir * 300.0f * deltaTime;
-	if (mPaddlePos.y < (PADDLE_H / 2))
+	mPaddlePos->y += mPaddleDir * 300.0f * deltaTime;
+	if (mPaddlePos->y < (PADDLE_H / 2))
 	{
-		mPaddlePos.y = PADDLE_H / 2;
+		mPaddlePos->y = PADDLE_H / 2;
 	}
-	else if (mPaddlePos.y > (WINDOW_HEIGHT - PADDLE_H / 2 - THICKNESS))
+	else if (mPaddlePos->y > (WINDOW_HEIGHT - PADDLE_H / 2 - THICKNESS))
 	{
-		mPaddlePos.y = WINDOW_HEIGHT - PADDLE_H / 2 - THICKNESS;
+		mPaddlePos->y = WINDOW_HEIGHT - PADDLE_H / 2 - THICKNESS;
 	}
 }
 
-void Game::MoveBall(float deltaTime)
+void Game::MoveBall(float deltaTime, Ball* ball)
 {
-	if ((mBallPos.y < THICKNESS && mBallVel.y < 0) ||
-		 mBallPos.y > WINDOW_HEIGHT - THICKNESS / 2 && mBallVel.y > 0) mBallVel.y *= -1;
+	if ((ball->ballPos.y < THICKNESS && ball->ballVel.y < 0) ||
+		 ball->ballPos.y > WINDOW_HEIGHT - THICKNESS / 2 && ball->ballVel.y > 0) ball->ballVel.y *= -1;
 
-	if ((mBallPos.x < THICKNESS && mBallVel.x < 0) ||
-		mBallPos.x > WINDOW_WIDTH - THICKNESS / 2 && mBallVel.x > 0) mBallVel.x *= -1;
+	if ((ball->ballPos.x < THICKNESS && ball->ballVel.x < 0) ||
+		ball->ballPos.x > WINDOW_WIDTH - THICKNESS / 2 && ball->ballVel.x > 0) ball->ballVel.x *= -1;
 
-	int diff = abs(mPaddlePos.y - mBallPos.y);
-	if (diff <= PADDLE_H / 2 &&
-		mBallPos.x <= 45 && mBallPos.x >= 15 &&
-		mBallVel.x < 0)
-	{
-		mBallVel.x *= -1;
-	}
+	
+	ball->ballVel.x *= CheckPaddlePosition(mPaddlePos_1, *ball);
+	ball->ballVel.x *= CheckPaddlePosition(mPaddlePos_2, *ball);
+	
 
-	mBallPos.x += mBallVel.x * 300 * deltaTime;
-	mBallPos.y += mBallVel.y * 300 * deltaTime;
+	ball->ballPos.x += ball->ballVel.x * 300 * deltaTime;
+	ball->ballPos.y += ball->ballVel.y * 300 * deltaTime;
+}
+
+float Game::CheckPaddlePosition(Vector2 paddlePos, Ball ball)
+{
+	int diff = abs(paddlePos.y - ball.ballPos.y);
+	//if (ball.ballVel.x < 0)
+	//{
+		if (diff <= PADDLE_H / 2 &&
+			ball.ballPos.x <= paddlePos.x + THICKNESS && ball.ballPos.x >= paddlePos.x - THICKNESS)
+		{
+			return -1;
+		}
+	//}
+	//else
+	//{
+	//	///要修正
+	//	if (diff <= PADDLE_H / 2 &&
+	//		ball.ballPos.x <= ball.ballPos.x + THICKNESS && ball.ballPos.x >= ball.ballPos.x - THICKNESS)
+	//	{
+	//		return -1;
+	//	}
+	//}
+	
+
+	return 1;
 }
 
 void Game::GenerateOutput()
@@ -173,34 +212,71 @@ void Game::GenerateOutput()
 		255
 	);
 
-	SDL_Rect wall{
+	///壁の作成
+	GenerateRect(
+		mRenderer,
 		0,
 		0,
 		WINDOW_WIDTH,
 		THICKNESS
-	};
+	);
 
-	SDL_RenderFillRect(mRenderer, &wall);
-
-	SDL_Rect ball{
-		static_cast<int>(mBallPos.x - THICKNESS / 2),
-		static_cast<int>(mBallPos.y - THICKNESS / 2),
+	//1つめのボールの作成
+	GenerateRect(
+		mRenderer,
+		static_cast<int>(ball_1.ballPos.x - THICKNESS / 2),
+		static_cast<int>(ball_1.ballPos.y - THICKNESS / 2),
 		THICKNESS,
+		THICKNESS);
+
+	//2つめのボールの作成
+	GenerateRect(
+		mRenderer,
+		static_cast<int>(ball_2.ballPos.x - THICKNESS / 2),
+		static_cast<int>(ball_2.ballPos.y - THICKNESS / 2),
 		THICKNESS,
-	};
+		THICKNESS
+	);
 
-	SDL_RenderFillRect(mRenderer, &ball);
-
-	SDL_Rect paddle{
-		static_cast<int>(mPaddlePos.x - THICKNESS / 2),
-		static_cast<int>(mPaddlePos.y - THICKNESS / 2),
+	//1つめのパドルの作成
+	GenerateRect(
+		mRenderer,
+		static_cast<int>(mPaddlePos_1.x - THICKNESS / 2),
+		static_cast<int>(mPaddlePos_1.y - THICKNESS / 2),
 		THICKNESS,
-		PADDLE_H
-	};
+		PADDLE_H);
 
-	SDL_RenderFillRect(mRenderer, &paddle);
+	//2つめのパドルの作成
+	GenerateRect(
+		mRenderer,
+		static_cast<int>(mPaddlePos_2.x - THICKNESS / 2),
+		static_cast<int>(mPaddlePos_2.y - THICKNESS / 2),
+		THICKNESS,
+		PADDLE_H);
 
 	SDL_RenderPresent(mRenderer);
 
 }
 
+/// <summary>
+/// 長方形のオブジェクトを作成する
+/// </summary>
+/// <param name="mRenderer"></param>
+/// <param name="x"></param>
+/// <param name="y"></param>
+/// <param name="width"></param>
+/// <param name="height"></param>
+void GenerateRect(SDL_Renderer* mRenderer, 
+				  int x,
+			      int y,
+				  int width,
+	              int height)
+{
+	SDL_Rect object{
+		x,
+		y,
+		width,
+		height
+	};
+	SDL_RenderFillRect(mRenderer, &object);
+}
